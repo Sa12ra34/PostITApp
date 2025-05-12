@@ -10,9 +10,17 @@ import path from "path";
 
 
 
-const app= express();
-app.use(express.json());
-app.use(cors());
+
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+// Allow requests from your frontend
+app.use(cors({
+    origin: 'https://postitapp-jwfj.onrender.com',
+    methods: 'GET,POST,PUT,DELETE',
+    credentials: true,
+}));
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
