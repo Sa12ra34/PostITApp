@@ -13,15 +13,17 @@ import path from "path";
 
 const express = require('express');
 const cors = require('cors');
+
 const app = express();
+app.use(express.json());
 
-// Allow requests from your frontend
+// Allow specific origin (more secure)
 app.use(cors({
-    origin: 'https://postitapp-jwfj.onrender.com',
-    methods: 'GET,POST,PUT,DELETE',
-    credentials: true,
+    origin: 'https://postitapp-jwfj.onrender.com',  // Frontend URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,  // Include cookies if needed
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       cb(null, "uploads/"); // Specify the directory to save uploaded files
