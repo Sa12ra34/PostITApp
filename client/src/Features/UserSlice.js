@@ -15,7 +15,7 @@ export const registerUser=createAsyncThunk("users/registerUsers",
   async (userData)=>{
     try{
       const response= await
-      axios.post("http://localhost:3001/registerUser",{
+      axios.post(`https://postitapp-server-ql42.onrender.com/registerUser`,{
         name:userData.name,
         email:userData.email,
         password:userData.password,
@@ -32,7 +32,7 @@ export const login=createAsyncThunk("users/login",
   async (userData)=>{
     try{
       const response =await
-      axios.post("http://localhost:3001/login",{
+      axios.post(`https://postitapp-server-ql42.onrender.com/login`,{
         email:userData.email,
         password:userData.password,
       });
@@ -49,7 +49,7 @@ export const login=createAsyncThunk("users/login",
 export const logout =createAsyncThunk("/users/logout",async()=>{
   try{
     const response=await
-    axios.post("http://localhost:3001/logout");
+    axios.post(`https://postitapp-server-ql42.onrender.com/logout`);
   }catch(error){}
 });
 
@@ -58,7 +58,7 @@ export const updateUserProfile = createAsyncThunk(
   async (userData) => {
     try {
       const response = await axios.put(
-        `http://localhost:3001/updateUserProfile/${userData.email}`, 
+        `https://postitapp-server-ql42.onrender.com/updateUserProfile/${userData.email}`, 
         {
       
           email: userData.email,
