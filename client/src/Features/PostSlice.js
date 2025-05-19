@@ -1,115 +1,124 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-//import { likePost } from "../Features/PostSlice";
 
-
+// Initialize the initial state
 const initialState = {
-    posts: [],
-    comments: [],
-    likes: [],
+  value: [],
+  user: {},
+  isLoading: false,
+  isSuccess: false,
+  isError: false,
+  errorMessage: "",
 };
-
-const postSlice = createSlice({
-    name: "posts",
-    initialState: initialState,
-    reducers: {},
-    extraReducers: (builder)=>{
-        
-    builder
-        .addCase(savePost.pending, (state) => {
-        state.status = "loading";
-    })
-        .addCase(savePost.fulfilled, (state, action) => {
-        console.log(action.payload);
-        state.status = "succeeded";
-        // Update the state with fetched posts adding the latest post in the beginning
-        state.posts.unshift(action.payload);
-    })
-        .addCase(savePost.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.error.message;
-    })
-        
-        .addCase(getPosts.pending, (state) => {
-            state.status = "loading";
-    })
-        .addCase(getPosts.fulfilled, (state, action) => {
-            state.status = "succeeded";
-            console.log(action.payload);
-        // Update the state with fetched posts adding the latest post in the beginning
-            state.posts = action.payload;
-    })
-        .addCase(getPosts.rejected, (state, action) => {
-            state.status = "failed";
-            state.error = action.error.message;
-    })
-    .addCase(likePost.pending, (state) => {
-        state.status = "loading";
-    })
-    .addCase(likePost.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        //Search the post id from the posts state
-        const updatedPostIndex = state.posts.findIndex(
-            (post) => post._id === action.payload._id
-        );
-        if (updatedPostIndex !== -1) {
-            state.posts[updatedPostIndex].likes = action.payload.likes;
-            }
-        })
-        .addCase(likePost.rejected, (state, action) => {
-            state.status = "failed";
-            state.error = action.error.message;
-        });
-    },
-
-});
-
-
-
-
-export const savePost = createAsyncThunk("posts/savePost", async (postData) => {
+ 
+// Thunk for registering a user
+export const register = createAsyncThunk("users/register",
+  async (userData, { rejectWithValue }) => {
     try {
-        const response = await axios.post(`https://postitapp-server-ql42.onrender.com/savePost`, {
-            postMsg: postData.postMsg,
-            email: postData.email,
-        });
-        const post = response.data.post;
-            return post; 
-}           catch (error) {
-    console.log(error);
-    }
-});  
-
-
-export const getPosts = createAsyncThunk("post/getPosts", async () => {
-    try {
-        const response = await axios.get(`https://postitapp-server-ql42.onrender.com/getPosts`);
-        return response.data.posts;
-        console.log(response);
+      const response = await axios.post(`https://postitapp-server-ql42.onrender.com/register`, {
+        fristname: userData.fristname,
+        lastname: userData.lastname,
+        email: userData.email,
+        password: userData.password,
+      });
+      return response.data.user;
     } catch (error) {
-    console.log(error);
+      return rejectWithValue(error.response?.data?.message || error.message);
     }
-}); 
+  }
+);
 
-
-export const likePost = createAsyncThunk("posts/likePost", async (postData) => {
-try {
-    //Pass along the URL the postId
-    const response = await axios.put(
-        `https://postitapp-server-ql42.onrender.com/likePost/${postData.postId}`,
-        {
-        userId: postData.userId,
-        }
-    );
-    const post = response.data.post;
-    return post;
-} catch (error) {
-    console.log(error);
-}
+// Thunk for logging in a user
+export const login = createAsyncThunk("users/login", async (userData, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(`https://postitapp-server-ql42.onrender.com/login`, {
+      email: userData.email,
+      password: userData.password,
+    });
+    return response.data.user;
+  } catch (error) {
+    return rejectWithValue("Invalid credentials");
+  }
 });
 
+// Thunk for logging out a user
+export const logout = createAsyncThunk("users/logout", async () => {
+  try {
+    await axios.post(`https://postitapp-server-ql42.onrender.com/logout`);
+    return {};
+  } catch (error) {
+    console.error(error);
+  }
+});
 
-export default postSlice.reducer;
+// Thunk for updating user profile
+export const updateUserProfile = createAsyncThunk(
+  "user/updateUserProfile",
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(
+        `https://postitapp-server-ql42.onrender.com/updateUserProfile/${userData.email}`,
+        userData,
+        { headers: { "Content-Type": "application/json" } }
+      );
+      return response.data.user;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Profile update failed");
+    }
+  }
+);
 
+// Define the slice
+export const userSlice = createSlice({
+  name: "users",
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(register.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(register.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.user = action.payload;
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.errorMessage = action.payload;
+      })
+      .addCase(login.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(login.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.user = action.payload;
+      })
+      .addCase(login.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.errorMessage = action.payload;
+      })
+      .addCase(logout.fulfilled, (state) => {
+        state.user = {};
+        state.isLoading = false;
+        state.isSuccess = false;
+      })
+      .addCase(updateUserProfile.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateUserProfile.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+      })
+      .addCase(updateUserProfile.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.errorMessage = action.payload;
+      });
+  },
+});
 
-
+export default userSlice.reducer;
